@@ -1,8 +1,7 @@
 import sys, subprocess, os, tempfile, json
 
-# دعم NixOS: ضمان الوصول للملفات المحلية
+# إعداد المسارات
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
 try:
     from database import Database
 except ImportError:
@@ -24,60 +23,72 @@ def get_pro_help():
 {C['C']}/_/ |_/\__,_/_/ /_/ /_/{C['B']}_/ |_|\__,_/_/ /_/ {C['Y']}v0.1.0{C['RST']}"""
     print(logo)
     w = 58
-    print(f"\n {C['W']}╭─ {C['G']}COMMANDS & GROUPS{C['W']} {'─'*(w-19)}╮")
-    print(f" │ {C['G']}nr save <cmd>{C['W']:<5} {C['GR']}•{C['W']} Save (use -g for group)                   │")
-    print(f" │ {C['G']}nr run-group <N>{C['W']:<4} {C['GR']}•{C['W']} Execute group commands                 │")
-    print(f" │ {C['G']}nr list{C['W']:<10} {C['GR']}•{C['W']} Show all commands                            │")
+    print(f"\n {C['W']}╭─ {C['G']}COMMANDS{C['W']} {'─'*(w-10)}╮")
+    print(f" │ {C['G']}nr <ID/Alias>{C['W']:<5} {C['GR']}•{C['W']} Run command by ID or Alias             │")
+    print(f" │ {C['G']}nr save <cmd>{C['W']:<5} {C['GR']}•{C['W']} Save (use -a for alias, -g for group)   │")
+    print(f" │ {C['G']}nr list{C['W']:<10} {C['GR']}•{C['W']} Show all saved commands                      │")
     print(f" ╰{'─'*w}╯")
     print(f"\n {C['W']}╭─ {C['M']}QUICK NOTES{C['W']} {'─'*(w-13)}╮")
     print(f" │ {C['M']}nr note add{C['W']:<8} {C['GR']}•{C['W']} Create a new note                          │")
     print(f" │ {C['M']}nr note ls{C['W']:<9} {C['GR']}•{C['W']} List all notes                              │")
     print(f" │ {C['M']}nr note view <ID>{C['W']:<3} {C['GR']}•{C['W']} Display note content                 │")
-    print(f" ╰{'─'*w}╯")
-    print(f"\n {C['W']}╭─ {C['Y']}SYSTEM{C['W']} {'─'*(w-8)}╮")
-    print(f" │ {C['Y']}nr export{C['W']:<10} {C['GR']}•{C['W']} Export data to JSON                        │")
-    print(f" │ {C['Y']}nr del <ID>{C['W']:<8} {C['GR']}•{C['W']} Delete a command                          │")
     print(f" ╰{'─'*w}╯{C['RST']}")
 
 def show_list():
     rows = db.get_all_commands()
-    if not rows: print(f" {C['R']}Empty.{C['RST']}"); return
-    top, sep, bot = f" {C['C']}╭{'─'*5}┬{'─'*12}┬{'─'*22}┬{'─'*12}╮", f" {C['C']}├{'─'*5}┼{'─'*12}┼{'─'*22}┼{'─'*12}┤", f" {C['C']}╰{'─'*5}┴{'─'*12}┴{'─'*22}┴{'─'*12}╯"
-    print(f"\n{top}\n │{C['W']} ID  {C['C']}│{C['W']} ALIAS      {C['C']}│{C['W']} COMMAND              {C['C']}│{C['W']} GROUP      {C['C']}│\n{sep}")
+    if not rows:
+        print(f"\n {C['R']}⚠ No commands found.{C['RST']}\n")
+        return
+    sep = f" {C['C']}├{'─'*5}┼{'─'*12}┼{'─'*24}┼{'─'*12}┤"
+    print(f"\n {C['C']}╭{'─'*5}┬{'─'*12}┬{'─'*24}┬{'─'*12}╮")
+    print(f" │ {C['W']}ID  {C['C']}│ {C['W']}ALIAS      {C['C']}│ {C['W']}COMMAND                 {C['C']}│ {C['W']}GROUP      {C['C']}│")
+    print(sep)
     for r in rows:
-        alias = str(r[5])[:10] if r[5] else "---"
-        print(f" │ {r[0]:<3} │ {alias:<10} │ {r[1][:20]:<20} │ {r[2]:<10} │")
-    print(f"{bot}{C['RST']}")
+        alias = (r['alias'] or "---")[:10]
+        cmd_disp = (r['command'][:21] + "..") if len(r['command']) > 21 else r['command']
+        print(f" │ {C['Y']}{str(r['cmd_number']):<3} {C['C']}│ {C['G']}{alias:<10} {C['C']}│ {C['W']}{cmd_disp:<22} {C['C']}│ {C['M']}{r['group_name']:<10} {C['C']}│")
+    print(f" {C['C']}╰{'─'*5}┴{'─'*12}┴{'─'*24}┴{'─'*12}╯{C['RST']}")
 
-def view_note(nid):
-    res = db.get_note(nid)
-    if not res: print(f" {C['R']}❌ Not found.{C['RST']}"); return
-    title, content, date = res
-    w = 56
-    print(f"\n {C['M']}╭{'─'*w}╮\n │ {C['BOLD']}{C['W']}{title.center(w)}{C['RST']}{C['M']} │\n ├{'─'*w}┤")
-    for line in content.splitlines():
-        print(f" {C['M']}│{C['RST']}  {line[:w-4]:<{w-4}}  {C['M']}│")
-    print(f" ╰{'─'*w}╯{C['RST']}")
+def run_by_id(identifier):
+    all_cmds = db.get_all_commands()
+    for r in all_cmds:
+        if str(r['cmd_number']) == identifier or (r['alias'] and r['alias'] == identifier):
+            print(f"{C['B']}🚀 Running:{C['RST']} {r['command']}")
+            subprocess.run(r['command'], shell=True)
+            db.increment_usage(r['cmd_number'])
+            return True
+    return False
 
 def main():
-    if len(sys.argv) < 2: return
+    if len(sys.argv) < 2:
+        get_pro_help()
+        return
+
     cmd = sys.argv[1]
     
-    if cmd in ["-h", "--help"]: get_pro_help()
-    elif cmd == "list": show_list()
+    if cmd in ["-h", "--help"]:
+        get_pro_help()
+    elif cmd == "list":
+        show_list()
     elif cmd == "save":
-        group, parts = 'general', sys.argv[2:]
-        if "-g" in parts:
-            idx = parts.index("-g"); group = parts[idx+1]; parts = parts[:idx] + parts[idx+2:]
-        if parts: db.add_command(" ".join(parts), group=group); print("✅ Saved.")
-    elif cmd == "run-group" and len(sys.argv) > 2:
-        for c, cid in db.get_by_group(sys.argv[2]):
-            print(f"🚀 {C['G']}Running:{C['RST']} {c}")
-            subprocess.run(c, shell=True); db.increment_usage(cid)
+        args = sys.argv[2:]
+        if not args: return
+        group, alias = 'general', None
+        if "-g" in args:
+            idx = args.index("-g"); group = args[idx+1]; args = args[:idx] + args[idx+2:]
+        if "-a" in args:
+            idx = args.index("-a"); alias = args[idx+1]; args = args[:idx] + args[idx+2:]
+        
+        command = " ".join(args)
+        if command:
+            db.add_command(command, alias=alias, group=group)
+            print(f" {C['G']}✅ Saved.{C['RST']}")
+    elif cmd == "del" and len(sys.argv) > 2:
+        db.delete_cmd(sys.argv[2]); print("🗑️ Deleted.")
     elif cmd == "note":
         args = sys.argv[2:]
         if not args or args[0] == "ls":
-            for n in db.get_all_notes(): print(f" {n[0]} 📄 {C['W']}{n[1]}{C['RST']}")
+            for n in db.get_all_notes(): print(f" {n['note_id']} 📄 {C['W']}{n['title']}{C['RST']}")
         elif args[0] == "add":
             title = " ".join(args[1:]) or "Untitled"
             with tempfile.NamedTemporaryFile(suffix=".tmp", delete=False) as tf:
@@ -85,12 +96,14 @@ def main():
                 with open(tf.name, 'r') as f: content = f.read()
             if content.strip(): db.add_note(title, content); print("✅ Note Saved.")
             os.remove(tf.name)
-        elif args[0] == "view" and len(args) > 1: view_note(args[1])
-    elif cmd == "export":
-        path = os.path.expanduser("~/numrun_backup.json")
-        with open(path, "w") as f: json.dump(db.get_backup_data(), f, indent=4)
-        print(f"✅ Exported to: {path}")
-    elif cmd == "del" and len(sys.argv) > 2:
-        db.delete_cmd(sys.argv[2]); print("🗑️ Deleted.")
+        elif args[0] == "view" and len(args) > 1:
+            # دالة عرض الملاحظة مدمجة هنا للتبسيط
+            res = db.get_note(args[1])
+            if res: print(f"\n{C['BOLD']}{res['title']}{C['RST']}\n{res['content']}")
+    else:
+        # إذا لم يكن أمراً محجوزاً، جرب تشغيله كـ ID
+        if not run_by_id(cmd):
+            print(f"{C['R']}❌ Unknown command or ID: {cmd}{C['RST']}")
 
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+    main()
