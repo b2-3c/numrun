@@ -38,6 +38,9 @@ class Database:
     def get_all_commands(self):
         return self.conn.execute("SELECT * FROM commands ORDER BY cmd_number").fetchall()
 
+    def get_by_group(self, group_name):
+        return self.conn.execute("SELECT * FROM commands WHERE group_name = ?", (group_name,)).fetchall()
+
     def increment_usage(self, num):
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
         with self.conn: self.conn.execute("UPDATE commands SET usage_count = usage_count + 1, last_used = ? WHERE cmd_number = ?", (now, num))
@@ -56,3 +59,8 @@ class Database:
 
     def get_note(self, nid):
         return self.conn.execute("SELECT * FROM notes WHERE note_id = ?", (nid,)).fetchone()
+
+    def get_backup_data(self):
+        cmds = [dict(row) for row in self.conn.execute("SELECT * FROM commands").fetchall()]
+        notes = [dict(row) for row in self.conn.execute("SELECT * FROM notes").fetchall()]
+        return {"commands": cmds, "notes": notes}
