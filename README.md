@@ -3,7 +3,7 @@
 **The Ultimate Smart Notebook for Terminal Users.**
 
 NumRun is a productivity tool designed for developers who use the command line. It allows you to save complex commands, organize them into groups, and keep quick text notes—all without leaving your terminal.
-
+![Screenshot](screenshots/1.png)
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![NixOS Compatible](https://img.shields.io/badge/NixOS-Compatible-brightgreen.svg)](https://nixos.org)
