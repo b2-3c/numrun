@@ -5,7 +5,7 @@
 [![NixOS Compatible](https://img.shields.io/badge/NixOS-Compatible-brightgreen.svg)](https://nixos.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](http://makeapullrequest.com)
 
-**(NumRun) is the "smart notebook" for black screen users. Instead of wasting time digging through your command history for a complex command you wrote a week ago, this tool lets you save your long commands and assign them a simple number (e.g., number 1). Once you type nr 1, the command runs instantly, with an awesome feature that warns you if the command you’re about to run is dangerous (like deletion commands) so you don’t make a mistake. You can even search through your commands quickly and visually.
+(NumRun) is the "smart notebook" for black screen users. Instead of wasting time digging through your command history for a complex command you wrote a week ago, this tool lets you save your long commands and assign them a simple number (e.g., number 1). Once you type nr 1, the command runs instantly, with an awesome feature that warns you if the command you’re about to run is dangerous (like deletion commands) so you don’t make a mistake. You can even search through your commands quickly and visually.
 
 ---
 
