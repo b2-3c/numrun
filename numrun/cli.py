@@ -31,7 +31,7 @@ def execute_cmd(identifier, extra_args):
     for i, arg in enumerate(extra_args, 1):
         cmd = cmd.replace(f"${i}", arg)
 
-    if any(danger in cmd.lower() for danger in ["rm ", "dd "]):
+    if any(danger in cmd.lower() for danger in ["rm ", "dd ", "mkfs"]):
         confirm = input(f"{C['YELLOW']}⚠️  GUARD: {C['RESET']}{cmd}\nExecute? (y/N): ")
         if confirm.lower() != 'y': return True
 
@@ -41,50 +41,68 @@ def execute_cmd(identifier, extra_args):
     return True
 
 def main():
-    if len(sys.argv) < 2: return
+    if len(sys.argv) < 2:
+        print(f"{C['CYAN']}NumRun v0.3.5 - Type 'nr -h' for help{C['RESET']}")
+        return
 
     first_arg = sys.argv[1]
     
-    # محاولة التشغيل أولاً
+    if first_arg in ["-h", "--help"]:
+        # (دالة المساعدة كما هي في الإصدارات السابقة مع تحديث طفيف)
+        print(f"{C['BOLD']}Usage:{C['RESET']} nr <id|name> | nr save <cmd> | nr list | nr del <id>")
+        return
+
     if execute_cmd(first_arg, sys.argv[2:]):
         return
 
     if first_arg == "save":
         if len(sys.argv) < 3: return
-        
         full_command = " ".join(sys.argv[2:])
         base_word = sys.argv[2].lower()
-        
-        # توليد الاقتراح (أول حرف + آخر حرف)
         suggested = (base_word[0] + base_word[-1]) if len(base_word) > 1 else base_word
         reserved = ["save", "list", "del", "nick", "search"]
         
         use_alias = None
-        
-        # فحص الاقتراح
         if suggested not in reserved and not suggested.isdigit() and not db.is_alias_exists(suggested):
             choice = input(f"💡 Suggestion: Use '{C['YELLOW']}{suggested}{C['RESET']}' as shortcut? (y/n) or enter custom: ")
-            if choice.lower() == 'y':
-                use_alias = suggested
-            elif choice.lower() != 'n' and choice.strip() != "":
-                use_alias = choice.strip()
+            if choice.lower() == 'y': use_alias = suggested
+            elif choice.lower() != 'n' and choice.strip() != "": use_alias = choice.strip()
         else:
             custom = input(f"📝 Enter a custom shortcut (or leave empty): ")
             if custom.strip(): use_alias = custom.strip()
-
-        # الحفظ النهائي في قاعدة البيانات
-        if use_alias and db.is_alias_exists(use_alias):
-            print(f"{C['RED']}⚠️ Shortcut '{use_alias}' already exists.{C['RESET']}")
-            use_alias = None
 
         num = db.add_command(full_command, use_alias)
         msg = f" with shortcut '{C['YELLOW']}{use_alias}{C['RESET']}'" if use_alias else ""
         print(f"✅ {C['GREEN']}Saved as #{num}{msg}{C['RESET']}")
 
     elif first_arg == "list":
-        for r in db.get_all():
-            alias = f"({C['YELLOW']}{r[2]}{C['RESET']})" if r[2] else ""
-            print(f"{C['CYAN']}{r[0]:<3}{C['RESET']} | {r[1][:50]:<50} {alias}")
+        rows = db.get_all()
+        if not rows:
+            print(f"{C['YELLOW']}📭 Your list is empty.{C['RESET']}"); return
+
+        # تنسيق الجدول المتقدم
+        header = f"{C['BOLD']}{C['BLUE']}{'ID':<4} | {'ALIAS':<10} | {'COMMAND':<40} | {'USES':<6} | {'LAST USED'}{C['RESET']}"
+        sep = f"{C['GRAY']}{'-'*4}-+-{'-'*10}-+-{'-'*40}-+-{'-'*6}-+-{'-'*16}{C['RESET']}"
+        
+        print(f"\n{C['CYAN']}📋 Command Inventory:{C['RESET']}")
+        print(header); print(sep)
+
+        for r in rows:
+            cid, cmd, alias, uses, last = r[0], r[1], (r[2] or "-"), r[3], (r[4] or "Never")
+            display_cmd = (cmd[:37] + "..") if len(cmd) > 37 else cmd
+            u_color = C['GREEN'] if uses > 5 else C['RESET']
+            
+            print(f"{cid:<4} | {C['YELLOW']}{alias:<10}{C['RESET']} | {display_cmd:<40} | {u_color}{uses:<6}{C['RESET']} | {C['GRAY']}{last}{C['RESET']}")
+        
+        print(sep)
+        print(f"{C['GRAY']}Total: {len(rows)} commands.{C['RESET']}\n")
+
+    elif first_arg == "nick":
+        if len(sys.argv) < 4: return
+        if db.set_alias(sys.argv[2], sys.argv[3]):
+            print(f"✅ #{sys.argv[2]} is now '{sys.argv[3]}'")
+        else:
+            print(f"{C['RED']}❌ Error: Name taken or ID invalid.{C['RESET']}")
 
     elif first_arg == "del":
         if len(sys.argv) > 2:
