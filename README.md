@@ -26,7 +26,7 @@
 
 ### 1. Standard Installation
 ```bash
-git clone [https://github.com/YOUR_USERNAME/numrun.git](https://github.com/YOUR_USERNAME/numrun.git)
+git clone https://github.com/b2-3c/numrun
 cd numrun
 pip install .
 
