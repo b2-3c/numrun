@@ -1,15 +1,12 @@
 import sys
-import argparse
 import subprocess
 import os
 import platform
 
 try:
     from numrun.database import Database
-    from numrun.setup_completion import install as install_completion
 except ImportError:
     from database import Database
-    from setup_completion import install as install_completion
 
 db = Database()
 
@@ -19,109 +16,80 @@ C = {
     "BOLD": "\033[1m", "GRAY": "\033[90m"
 }
 
-def get_fastfetch_help():
-    logo = fr"""
-{C['BLUE']}    _   __              {C['CYAN']}____            
-{C['BLUE']}   / | / /_  ______ ___ {C['CYAN']}/ __ \__  ______ 
-{C['BLUE']}  /  |/ / / / / __ `__ \{C['CYAN']}/ /_/ / / / / __ \\
-{C['BLUE']} / /|  / /_/ / / / / / / {C['CYAN']}_  __/ /_/ / / / /
-{C['BLUE']}/_/ |_/\__,_/_/ /_/ /_/{C['CYAN']}_/ |_|\__,_/_/ /_/ 
-    """
-    info = f"""
-{C['BLUE']}{C['BOLD']}OS{C['RESET']}: {platform.system()}
-{C['BLUE']}{C['BOLD']}Version{C['RESET']}: 0.3.0
-{C['BLUE']}{C['BOLD']}Database{C['RESET']}: {len(db.get_all())} saved
-{C['GRAY']}----------------------------------------{C['RESET']}
-{C['CYAN']}{C['BOLD']}AVAILABLE COMMANDS:{C['RESET']}
+def execute_cmd(identifier, extra_args):
+    res = db.get_by_alias(identifier)
+    cmd_id = None
+    if res:
+        cmd, cmd_id = res[0], res[1]
+    elif identifier.isdigit():
+        res = db.get_by_num(int(identifier))
+        if res:
+            cmd, cmd_id = res[0], int(identifier)
+    
+    if not cmd_id: return False
 
-  {C['GREEN']}nr{C['RESET']}               Open visual search (FZF)
-  {C['GREEN']}nr <id>{C['RESET']}          Run command by its ID number
-  {C['GREEN']}nr save <cmd>{C['RESET']}    Save a new command (Quotes optional)
-  {C['GREEN']}nr list{C['RESET']}          Show all saved commands
-  {C['GREEN']}nr search <q>{C['RESET']}    Search commands by text
-  {C['GREEN']}nr del <id>{C['RESET']}      Delete a command
-
-{C['CYAN']}{C['BOLD']}EXAMPLES:{C['RESET']}
-  {C['GRAY']}# Save a command:{C['RESET']}
-  nr save sudo nano /etc/nixos/configuration.nix
-  
-  {C['GRAY']}# Run command number 5:{C['RESET']}
-  nr 5
-
-  {C['GRAY']}# Run with dynamic arguments ($1, $2):{C['RESET']}
-  nr 1 my_folder_name
-    """
-    l_lines, i_lines = logo.strip("\n").split("\n"), info.strip("\n").split("\n")
-    return "\n" + "\n".join(f"{l_lines[i] if i<len(l_lines) else ' '*28}  {i_lines[i] if i<len(i_lines) else ''}" 
-                            for i in range(max(len(l_lines), len(i_lines))))
-
-def execute_cmd(num, extra_args):
-    res = db.get_by_num(num)
-    if not res:
-        print(f"{C['RED']}❌ Error: #{num} not found.{C['RESET']}"); return
-    cmd = res[0]
     for i, arg in enumerate(extra_args, 1):
         cmd = cmd.replace(f"${i}", arg)
-    if any(danger in cmd.lower() for danger in ["rm ", "rmdir", "dd "]):
+
+    if any(danger in cmd.lower() for danger in ["rm ", "dd "]):
         confirm = input(f"{C['YELLOW']}⚠️  GUARD: {C['RESET']}{cmd}\nExecute? (y/N): ")
-        if confirm.lower() != 'y': return
+        if confirm.lower() != 'y': return True
+
     print(f"{C['BLUE']}🚀 Running:{C['RESET']} {cmd}")
-    db.increment_usage(num)
+    db.increment_usage(cmd_id)
     subprocess.run(cmd, shell=True)
+    return True
 
 def main():
-    # 1. المساعدة المخصصة
-    if len(sys.argv) == 1:
-        from cli import interactive_select # محاولة التشغيل التفاعلي
-        interactive_select()
+    if len(sys.argv) < 2: return
+
+    first_arg = sys.argv[1]
+    
+    # محاولة التشغيل أولاً
+    if execute_cmd(first_arg, sys.argv[2:]):
         return
+
+    if first_arg == "save":
+        if len(sys.argv) < 3: return
         
-    if sys.argv[1] in ["-h", "--help"]:
-        print(get_fastfetch_help())
-        return
-
-    # 2. التشغيل بالرقم nr 1
-    if sys.argv[1].isdigit():
-        execute_cmd(int(sys.argv[1]), sys.argv[2:])
-        return
-
-    # 3. معالجة الأوامر الفرعية
-    cmd_type = sys.argv[1]
-
-    if cmd_type == "save":
-        if len(sys.argv) < 3:
-            print(f"{C['RED']}❌ Usage: nr save <your command>{C['RESET']}")
-            return
-        # جمع كل الكلمات بعد كلمة save في نص واحد
         full_command = " ".join(sys.argv[2:])
-        num = db.add_command(full_command)
-        print(f"✅ {C['GREEN']}Saved as #{num}{C['RESET']}")
-
-    elif cmd_type == "list":
-        rows = db.get_all()
-        for r in rows:
-            print(f"{C['CYAN']}{r[0]:<3}{C['RESET']} | {r[1]}")
-
-    elif cmd_type == "search":
-        if len(sys.argv) < 3:
-            print(f"{C['RED']}❌ Usage: nr search <keyword>{C['RESET']}")
-            return
-        for r in db.search(sys.argv[2]):
-            print(f"{C['GREEN']}{r[0]}{C['RESET']} → {r[1]}")
-
-    elif cmd_type == "del":
-        if len(sys.argv) < 3:
-            print(f"{C['RED']}❌ Usage: nr del <id>{C['RESET']}")
-            return
-        db.delete(int(sys.argv[2]))
-        print(f"🗑️ {C['YELLOW']}Deleted.{C['RESET']}")
-
-    elif cmd_type == "setup-completion":
-        install_completion()
+        base_word = sys.argv[2].lower()
         
-    else:
-        print(f"{C['RED']}❌ Unknown command: {cmd_type}{C['RESET']}")
-        print("Type 'nr -h' for help.")
+        # توليد الاقتراح (أول حرف + آخر حرف)
+        suggested = (base_word[0] + base_word[-1]) if len(base_word) > 1 else base_word
+        reserved = ["save", "list", "del", "nick", "search"]
+        
+        use_alias = None
+        
+        # فحص الاقتراح
+        if suggested not in reserved and not suggested.isdigit() and not db.is_alias_exists(suggested):
+            choice = input(f"💡 Suggestion: Use '{C['YELLOW']}{suggested}{C['RESET']}' as shortcut? (y/n) or enter custom: ")
+            if choice.lower() == 'y':
+                use_alias = suggested
+            elif choice.lower() != 'n' and choice.strip() != "":
+                use_alias = choice.strip()
+        else:
+            custom = input(f"📝 Enter a custom shortcut (or leave empty): ")
+            if custom.strip(): use_alias = custom.strip()
+
+        # الحفظ النهائي في قاعدة البيانات
+        if use_alias and db.is_alias_exists(use_alias):
+            print(f"{C['RED']}⚠️ Shortcut '{use_alias}' already exists.{C['RESET']}")
+            use_alias = None
+
+        num = db.add_command(full_command, use_alias)
+        msg = f" with shortcut '{C['YELLOW']}{use_alias}{C['RESET']}'" if use_alias else ""
+        print(f"✅ {C['GREEN']}Saved as #{num}{msg}{C['RESET']}")
+
+    elif first_arg == "list":
+        for r in db.get_all():
+            alias = f"({C['YELLOW']}{r[2]}{C['RESET']})" if r[2] else ""
+            print(f"{C['CYAN']}{r[0]:<3}{C['RESET']} | {r[1][:50]:<50} {alias}")
+
+    elif first_arg == "del":
+        if len(sys.argv) > 2:
+            db.delete(int(sys.argv[2]))
+            print("🗑️ Deleted.")
 
 if __name__ == "__main__":
     main()
