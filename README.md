@@ -5,43 +5,43 @@
 [![NixOS Compatible](https://img.shields.io/badge/NixOS-Compatible-brightgreen.svg)](https://nixos.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](http://makeapullrequest.com)
 
-**NumRun** هو أداة CLI متقدمة للمستخدمين المحترفين لإدارة وتنفيذ أوامر Shell معقدة باستخدام أرقام بسيطة. يتميز بواجهة **Fastfetch-style**، بحث تفاعلي، ومعالجة وسائط ديناميكية.
+**NumRun** is a professional-grade CLI tool for power users to manage and execute complex shell commands using simple index numbers. It features a **Fastfetch-style interface**, interactive search, and dynamic arguments.
 
 ---
 
-## ✨ المميزات الاحترافية
+## ✨ Pro Features
 
-* **⚡ تنفيذ فوري:** شغّل أي أمر عبر معرفه:
+* **⚡ Instant Execution:** Run any command by its ID:
 
   ```bash
   nr 5
   ```
-* **🎯 الوضع التفاعلي:** شغّل `nr` بدون معطيات لفتح بحث بصري (مع تكامل FZF).
-* **🔧 معطيات ديناميكية:** احفظ الأوامر مع `$1, $2` وأدخل القيم وقت التشغيل:
+* **🎯 Interactive Mode:** Run `nr` without arguments to open a visual search (FZF integration).
+* **🔧 Dynamic Arguments:** Save commands with `$1, $2` and pass values at runtime:
 
   ```bash
   nr 1 google.com
   ```
-* **🛡️ حماية ذكية:** يكشف تلقائيًا الأوامر الخطرة (مثل `rm`) ويطلب التأكيد.
-* **📊 تحليلات الاستخدام:** تتبع عدد مرات التنفيذ وآخر مرة تم استخدامها.
-* **🏷️ البحث بالوسوم:** ابحث بالمحتوى أو الوسوم المخصصة مثل `docker` أو `git`.
-* **⌨️ إكمال تلقائي (TAB):** تكامل عميق مع Bash وZsh.
-* **❄️ تحسين لـ NixOS:** بيئة قابلة لإعادة الإنتاج عبر `shell.nix`.
+* **🛡️ Smart Guard:** Automatically detects dangerous commands (like `rm`) and asks for confirmation.
+* **📊 Usage Analytics:** Tracks execution counts and last used timestamps.
+* **🏷️ Tagging & Search:** Search by content or custom tags like `docker` or `git`.
+* **⌨️ TAB Autocomplete:** Deep integration with Bash and Zsh.
+* **❄️ NixOS Optimized:** Reproducible environment via `shell.nix`.
 
 ---
 
-## 🛠️ التثبيت
+## 🛠️ Installation
 
-### 1️⃣ التثبيت السريع (موصى به)
+### 1️⃣ Quick Setup (Recommended)
 
 ```bash
 git clone https://github.com/b2-3c/numrun
 cd numrun
 bash setup.sh
-source ~/.bashrc  # أو ~/.zshrc
+source ~/.bashrc  # or ~/.zshrc
 ```
 
-### 2️⃣ التثبيت اليدوي
+### 2️⃣ Manual Installation
 
 ```bash
 pip install -e .
@@ -50,64 +50,64 @@ numrun setup-completion
 
 ---
 
-## 🚀 دليل البدء السريع
+## 🚀 Quick Start Guide
 
-### حفظ أمر مع معطيات ديناميكية
+### Save a Command with Dynamic Arguments
 
 ```bash
 nr save "ping -c 3 $1"
-# تم الحفظ كـ #1
+# Saved as #1
 ```
 
-### التنفيذ مع قيمة
+### Execute with Value
 
 ```bash
 nr 1 google.com
-# ينفذ: ping -c 3 google.com
+# Executes: ping -c 3 google.com
 ```
 
-### البحث البصري (FZF)
+### Visual Search (FZF)
 
-اكتب `nr` واضغط Enter لتصفح الأوامر بشكل تفاعلي.
+Type `nr` and press Enter to browse your commands interactively.
 
-### حماية ذكية في العمل
+### Smart Guard in Action
 
-إذا حاولت تنفيذ أمر يحتوي على `rm` أو `dd`, ستظهر رسالة:
+If you try to run a command containing `rm` or `dd`, NumRun will prompt:
 ⚠️ DANGER DETECTED. Confirm execution? (y/N)
 
 ---
 
-## 📂 هيكل المشروع
+## 📂 Project Structure
 
 ```
 numrun/
-├─ cli.py         # المنطق الأساسي مع واجهة Fastfetch وArgument Parser
-├─ database.py    # معالجة SQLite مع دعم الترحيل التلقائي
-├─ completions/   # سكريبتات الإكمال لـ Bash/Zsh
-├─ setup.sh       # مُثبّت بنقرة واحدة وإنشاء aliases
-└─ shell.nix      # بيئة قابلة لإعادة الإنتاج لمستخدمي Nix
+├─ cli.py         # Core logic with Fastfetch-style UI and Argument Parser
+├─ database.py    # SQLite handler with auto-migration support
+├─ completions/   # Shell completion scripts for Bash/Zsh
+├─ setup.sh       # One-click installer and alias creator
+└─ shell.nix      # Reproducible environment for Nix users
 ```
 
 ---
 
-## 🤝 المساهمة
+## 🤝 Contributing
 
-1. استنسخ المشروع (Fork).
-2. أنشئ فرع جديد:
+1. Fork the project.
+2. Create a feature branch:
 
    ```bash
    git checkout -b feature/AmazingFeature
    ```
-3. نفّذ تغييراتك.
-4. ادفع التغييرات إلى الفرع:
+3. Implement your changes.
+4. Push to the branch:
 
    ```bash
    git push origin feature/AmazingFeature
    ```
-5. افتح Pull Request.
+5. Open a Pull Request.
 
 ---
 
-## 📜 الترخيص
+## 📜 License
 
-هذا المشروع مرخّص بموجب MIT License. لمزيد من المعلومات، انظر ملف `LICENSE`.
+This project is licensed under the MIT License. See the `LICENSE` file for more information.
