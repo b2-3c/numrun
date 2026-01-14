@@ -41,7 +41,6 @@ class Database:
         return res is not None
 
     def get_all(self):
-        # جلب البيانات مرتبة حسب الرقم التعريفي
         return self.conn.execute("SELECT cmd_number, command, alias, usage_count, last_used FROM commands ORDER BY cmd_number").fetchall()
 
     def get_by_num(self, num):
