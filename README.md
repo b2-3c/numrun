@@ -40,7 +40,7 @@ cd numrun
 bash setup.sh
 source ~/.bashrc  # or ~/.zshrc
 ```
-
+Install the search utility: nix-env -iA nixos.fzf (or via your system's package manager).
 ### 2️⃣ Manual Installation
 
 ```bash
@@ -116,11 +116,6 @@ numrun/
 
 ---
 
-إذا كنت قد أضفت أوامر سابقاً، يفضل مسح القاعدة القديمة لتجنب تضارب الأعمدة: rm ~/.numrun.db.
-
-قم بتثبيت الأداة المساعدة للبحث: nix-env -iA nixos.fzf (أو عبر مدير حزم نظامك).
-
-جرب الآن: nr save "ls -la" وشاهد ميزة المجموعات والـ Alias.
 
 ## 📜 License
 
