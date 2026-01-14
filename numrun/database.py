@@ -22,6 +22,8 @@ class Database:
             """)
             cursor = self.conn.execute("PRAGMA table_info(commands)")
             columns = [column[1] for column in cursor.fetchall()]
+            if 'last_used' not in columns:
+                self.conn.execute("ALTER TABLE commands ADD COLUMN last_used TEXT")
             if 'alias' not in columns:
                 self.conn.execute("ALTER TABLE commands ADD COLUMN alias TEXT")
 
@@ -39,7 +41,8 @@ class Database:
         return res is not None
 
     def get_all(self):
-        return self.conn.execute("SELECT cmd_number, command, alias, usage_count FROM commands ORDER BY cmd_number").fetchall()
+        # جلب البيانات مرتبة حسب الرقم التعريفي
+        return self.conn.execute("SELECT cmd_number, command, alias, usage_count, last_used FROM commands ORDER BY cmd_number").fetchall()
 
     def get_by_num(self, num):
         return self.conn.execute("SELECT command FROM commands WHERE cmd_number = ?", (num,)).fetchone()
@@ -55,3 +58,11 @@ class Database:
     def delete(self, num):
         with self.conn:
             self.conn.execute("DELETE FROM commands WHERE cmd_number = ?", (num,))
+
+    def set_alias(self, num, alias_name):
+        with self.conn:
+            try:
+                self.conn.execute("UPDATE commands SET alias = ? WHERE cmd_number = ?", (alias_name, num))
+                return True
+            except sqlite3.IntegrityError:
+                return False
