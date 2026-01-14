@@ -17,26 +17,26 @@ C = {
 }
 
 def get_pro_help():
-    logo = fr"""{C['C']}    _   __              {C['B']}____ 
-{C['C']}   / | / /_  ______ ___ {C['B']}/ __ \__  ______ 
-{C['C']}  /  |/ / / / / __ `__ \{C['B']}/ /_/ / / / / __ \\
-{C['C']} / /|  / /_/ / / / / / / {C['B']}_  __/ /_/ / / / /
+    logo = fr"""{C['C']}    _   __              {C['B']}  ____ 
+{C['C']}   / | / /_  ______ ___ {C['B']} / __  \__  ______ 
+{C['C']}  /  |/ / / / / __ `__ \{C['B']}/ /_/  / / /  / __ \\
+{C['C']} / /|  / /_/ / / / / / / {C['B']}_  __/ /_/  / / / /
 {C['C']}/_/ |_/\__,_/_/ /_/ /_/{C['B']}_/ |_|\__,_/_/ /_/ {C['Y']}v0.1.0{C['RST']}"""
     print(logo)
     w = 58
     print(f"\n {C['W']}╭─ {C['G']}COMMANDS & GROUPS{C['W']} {'─'*(w-19)}╮")
-    print(f" │ {C['G']}nr save <cmd>{C['W']:<5} {C['GR']}•{C['W']} Save (use -g for group)           │")
-    print(f" │ {C['G']}nr run-group <N>{C['W']:<4} {C['GR']}•{C['W']} Execute group commands            │")
-    print(f" │ {C['G']}nr list{C['W']:<10} {C['GR']}•{C['W']} Show all commands                 │")
+    print(f" │ {C['G']}nr save <cmd>{C['W']:<5} {C['GR']}•{C['W']} Save (use -g for group)                   │")
+    print(f" │ {C['G']}nr run-group <N>{C['W']:<4} {C['GR']}•{C['W']} Execute group commands                 │")
+    print(f" │ {C['G']}nr list{C['W']:<10} {C['GR']}•{C['W']} Show all commands                            │")
     print(f" ╰{'─'*w}╯")
     print(f"\n {C['W']}╭─ {C['M']}QUICK NOTES{C['W']} {'─'*(w-13)}╮")
-    print(f" │ {C['M']}nr note add{C['W']:<8} {C['GR']}•{C['W']} Create a new note                 │")
-    print(f" │ {C['M']}nr note ls{C['W']:<9} {C['GR']}•{C['W']} List all notes                    │")
-    print(f" │ {C['M']}nr note view <ID>{C['W']:<3} {C['GR']}•{C['W']} Display note content              │")
+    print(f" │ {C['M']}nr note add{C['W']:<8} {C['GR']}•{C['W']} Create a new note                          │")
+    print(f" │ {C['M']}nr note ls{C['W']:<9} {C['GR']}•{C['W']} List all notes                              │")
+    print(f" │ {C['M']}nr note view <ID>{C['W']:<3} {C['GR']}•{C['W']} Display note content                 │")
     print(f" ╰{'─'*w}╯")
     print(f"\n {C['W']}╭─ {C['Y']}SYSTEM{C['W']} {'─'*(w-8)}╮")
-    print(f" │ {C['Y']}nr export{C['W']:<10} {C['GR']}•{C['W']} Export data to JSON                │")
-    print(f" │ {C['Y']}nr del <ID>{C['W']:<8} {C['GR']}•{C['W']} Delete a command                  │")
+    print(f" │ {C['Y']}nr export{C['W']:<10} {C['GR']}•{C['W']} Export data to JSON                        │")
+    print(f" │ {C['Y']}nr del <ID>{C['W']:<8} {C['GR']}•{C['W']} Delete a command                          │")
     print(f" ╰{'─'*w}╯{C['RST']}")
 
 def show_list():
