@@ -5,81 +5,109 @@
 [![NixOS Compatible](https://img.shields.io/badge/NixOS-Compatible-brightgreen.svg)](https://nixos.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](http://makeapullrequest.com)
 
-**NumRun** is a pro-grade CLI tool for power users to manage and execute complex shell commands using simple index numbers. Featuring a **Fastfetch-style interface**, interactive search, and dynamic arguments.
+**NumRun** هو أداة CLI متقدمة للمستخدمين المحترفين لإدارة وتنفيذ أوامر Shell معقدة باستخدام أرقام بسيطة. يتميز بواجهة **Fastfetch-style**، بحث تفاعلي، ومعالجة وسائط ديناميكية.
 
 ---
 
-## ✨ Pro Features
+## ✨ المميزات الاحترافية
 
-- **⚡ Instant Execution:** Run any command by ID: `nr 5`.
-- **🎯 Interactive Mode:** Run `nr` without arguments to open a visual search (FZF integration).
-- **🔧 Dynamic Arguments:** Save commands with `$1, $2` and pass values at runtime (e.g., `nr 1 google.com`).
-- **🛡️ Smart Guard:** Automatically detects dangerous commands (like `rm`) and asks for confirmation.
-- **📊 Usage Analytics:** Tracks execution counts and "Last Used" timestamps.
-- **🏷️ Tagging & Search:** Search by content or custom tags like `docker` or `git`.
-- **⌨️ TAB Autocomplete:** Deep integration with Bash and Zsh.
-- **❄️ NixOS Optimized:** Reproducible environment via `shell.nix`.
+* **⚡ تنفيذ فوري:** شغّل أي أمر عبر معرفه:
+
+  ```bash
+  nr 5
+  ```
+* **🎯 الوضع التفاعلي:** شغّل `nr` بدون معطيات لفتح بحث بصري (مع تكامل FZF).
+* **🔧 معطيات ديناميكية:** احفظ الأوامر مع `$1, $2` وأدخل القيم وقت التشغيل:
+
+  ```bash
+  nr 1 google.com
+  ```
+* **🛡️ حماية ذكية:** يكشف تلقائيًا الأوامر الخطرة (مثل `rm`) ويطلب التأكيد.
+* **📊 تحليلات الاستخدام:** تتبع عدد مرات التنفيذ وآخر مرة تم استخدامها.
+* **🏷️ البحث بالوسوم:** ابحث بالمحتوى أو الوسوم المخصصة مثل `docker` أو `git`.
+* **⌨️ إكمال تلقائي (TAB):** تكامل عميق مع Bash وZsh.
+* **❄️ تحسين لـ NixOS:** بيئة قابلة لإعادة الإنتاج عبر `shell.nix`.
 
 ---
 
-## 🛠️ Installation
+## 🛠️ التثبيت
 
-### 1. Quick Setup (Recommended)
+### 1️⃣ التثبيت السريع (موصى به)
+
 ```bash
-git clone [https://github.com/b2-3c/numrun](https://github.com/b2-3c/numrun)
+git clone https://github.com/b2-3c/numrun
 cd numrun
 bash setup.sh
-source ~/.bashrc # or ~/.zshrc
+source ~/.bashrc  # أو ~/.zshrc
+```
 
-2. Manual Installation
-Bash
+### 2️⃣ التثبيت اليدوي
 
+```bash
 pip install -e .
 numrun setup-completion
+```
 
-🚀 Quick Start Guide
-Save with Dynamic Args
-Bash
+---
 
+## 🚀 دليل البدء السريع
+
+### حفظ أمر مع معطيات ديناميكية
+
+```bash
 nr save "ping -c 3 $1"
-# Saved as #1
+# تم الحفظ كـ #1
+```
 
-Execute with Value
-Bash
+### التنفيذ مع قيمة
 
+```bash
 nr 1 google.com
-# Executes: ping -c 3 google.com
+# ينفذ: ping -c 3 google.com
+```
 
-Visual Search (FZF)
+### البحث البصري (FZF)
 
-Simply type nr and hit Enter to browse your commands interactively.
-Smart Guard in Action
+اكتب `nr` واضغط Enter لتصفح الأوامر بشكل تفاعلي.
 
-If you try to run a command containing rm or dd, NumRun will prompt: ⚠️ DANGER DETECTED. Confirm execution? (y/N)
-📂 Project Structure
+### حماية ذكية في العمل
 
-    numrun/cli.py: Core logic with Fastfetch-style UI and Argument Parser.
+إذا حاولت تنفيذ أمر يحتوي على `rm` أو `dd`, ستظهر رسالة:
+⚠️ DANGER DETECTED. Confirm execution? (y/N)
 
-    numrun/database.py: SQLite handler with auto-migration support.
+---
 
-    completions/: Shell completion scripts for Bash/Zsh.
+## 📂 هيكل المشروع
 
-    setup.sh: One-click installer and alias creator.
+```
+numrun/
+├─ cli.py         # المنطق الأساسي مع واجهة Fastfetch وArgument Parser
+├─ database.py    # معالجة SQLite مع دعم الترحيل التلقائي
+├─ completions/   # سكريبتات الإكمال لـ Bash/Zsh
+├─ setup.sh       # مُثبّت بنقرة واحدة وإنشاء aliases
+└─ shell.nix      # بيئة قابلة لإعادة الإنتاج لمستخدمي Nix
+```
 
-    shell.nix: Declarative environment for Nix users.
+---
 
-🤝 Contributing
+## 🤝 المساهمة
 
-    Fork the Project.
+1. استنسخ المشروع (Fork).
+2. أنشئ فرع جديد:
 
-    Create your Feature Branch (git checkout -b feature/AmazingFeature).
+   ```bash
+   git checkout -b feature/AmazingFeature
+   ```
+3. نفّذ تغييراتك.
+4. ادفع التغييرات إلى الفرع:
 
-    Commit your Changes (git commit -m 'Add some AmazingFeature').
+   ```bash
+   git push origin feature/AmazingFeature
+   ```
+5. افتح Pull Request.
 
-    Push to the Branch (git push origin feature/AmazingFeature).
+---
 
-    Open a Pull Request.
+## 📜 الترخيص
 
-📜 License
-
-Distributed under the MIT License. See LICENSE for more information.
+هذا المشروع مرخّص بموجب MIT License. لمزيد من المعلومات، انظر ملف `LICENSE`.
