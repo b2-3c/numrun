@@ -1,11 +1,11 @@
-import sqlite3, os
+import sqlite3, os, json
 from datetime import datetime
 
 class Database:
     def __init__(self, db_path="~/.numrun.db"):
         self.db_path = os.path.expanduser(db_path)
         self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row  # الوصول للبيانات بأسماء الأعمدة
+        self.conn.row_factory = sqlite3.Row 
         self.create_table()
 
     def create_table(self):
@@ -54,8 +54,7 @@ class Database:
 
     def increment_usage(self, num):
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        with self.conn: 
-            self.conn.execute("UPDATE commands SET usage_count = usage_count + 1, last_used = ? WHERE cmd_number = ?", (now, num))
+        with self.conn: self.conn.execute("UPDATE commands SET usage_count = usage_count + 1, last_used = ? WHERE cmd_number = ?", (now, num))
 
     def delete_cmd(self, num):
         with self.conn:
@@ -64,8 +63,7 @@ class Database:
 
     def add_note(self, title, content):
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        with self.conn:
-            self.conn.execute("INSERT INTO notes (title, content, created_at) VALUES (?, ?, ?)", (title, content, now))
+        with self.conn: self.conn.execute("INSERT INTO notes (title, content, created_at) VALUES (?, ?, ?)", (title, content, now))
 
     def get_all_notes(self):
         return self.conn.execute("SELECT note_id, title, created_at FROM notes ORDER BY note_id DESC").fetchall()
