@@ -31,24 +31,16 @@ class Database:
     def add_command(self, command, alias=None, group='general'):
         try:
             with self.conn:
-                self.conn.execute(
-                    "INSERT INTO commands (command, alias, group_name) VALUES (?, ?, ?)", 
-                    (command, alias, group)
-                )
+                self.conn.execute("INSERT INTO commands (command, alias, group_name) VALUES (?, ?, ?)", (command, alias, group))
             return True
-        except sqlite3.IntegrityError:
-            return False
+        except sqlite3.IntegrityError: return False
 
     def get_all_commands(self):
         return self.conn.execute("SELECT * FROM commands ORDER BY cmd_number").fetchall()
 
-    def get_by_group(self, group_name):
-        return self.conn.execute("SELECT command, cmd_number FROM commands WHERE group_name = ?", (group_name,)).fetchall()
-
     def increment_usage(self, num):
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        with self.conn: 
-            self.conn.execute("UPDATE commands SET usage_count = usage_count + 1, last_used = ? WHERE cmd_number = ?", (now, num))
+        with self.conn: self.conn.execute("UPDATE commands SET usage_count = usage_count + 1, last_used = ? WHERE cmd_number = ?", (now, num))
 
     def delete_cmd(self, num):
         with self.conn:
@@ -57,16 +49,10 @@ class Database:
 
     def add_note(self, title, content):
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        with self.conn:
-            self.conn.execute("INSERT INTO notes (title, content, created_at) VALUES (?, ?, ?)", (title, content, now))
-
-    def get_note(self, nid):
-        return self.conn.execute("SELECT title, content, created_at FROM notes WHERE note_id = ?", (nid,)).fetchone()
+        with self.conn: self.conn.execute("INSERT INTO notes (title, content, created_at) VALUES (?, ?, ?)", (title, content, now))
 
     def get_all_notes(self):
         return self.conn.execute("SELECT note_id, title, created_at FROM notes ORDER BY note_id DESC").fetchall()
 
-    def get_backup_data(self):
-        cmds = [dict(row) for row in self.conn.execute("SELECT * FROM commands").fetchall()]
-        notes = [dict(row) for row in self.conn.execute("SELECT * FROM notes").fetchall()]
-        return {"commands": cmds, "notes": notes}
+    def get_note(self, nid):
+        return self.conn.execute("SELECT * FROM notes WHERE note_id = ?", (nid,)).fetchone()
