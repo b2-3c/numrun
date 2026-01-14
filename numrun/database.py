@@ -1,5 +1,6 @@
 import sqlite3
 import os
+from datetime import datetime
 
 class Database:
     def __init__(self, db_path="~/.numrun.db"):
@@ -14,7 +15,8 @@ class Database:
                     cmd_number INTEGER PRIMARY KEY AUTOINCREMENT,
                     command TEXT NOT NULL,
                     tags TEXT,
-                    usage_count INTEGER DEFAULT 0
+                    usage_count INTEGER DEFAULT 0,
+                    last_used TEXT
                 )
             """)
 
@@ -34,9 +36,10 @@ class Database:
         res = self.conn.execute("SELECT command FROM commands WHERE cmd_number = ?", (num,)).fetchone()
         return res
 
-    def delete(self, num):
+    def increment_usage(self, num):
+        now = datetime.now().strftime("%Y-%m-%d %H:%M")
         with self.conn:
-            self.conn.execute("DELETE FROM commands WHERE cmd_number = ?", (num,))
+            self.conn.execute("UPDATE commands SET usage_count = usage_count + 1, last_used = ? WHERE cmd_number = ?", (now, num))
 
     def update_command(self, num, new_cmd):
         with self.conn:
@@ -45,15 +48,14 @@ class Database:
     def add_tag(self, num, tag):
         with self.conn:
             res = self.conn.execute("SELECT tags FROM commands WHERE cmd_number = ?", (num,)).fetchone()
-            current_tags = res[0] if res and res[0] else ""
-            tags_set = set(current_tags.split(",")) if current_tags else set()
-            tags_set.add(tag)
-            new_tags = ",".join(filter(None, tags_set))
-            self.conn.execute("UPDATE commands SET tags = ? WHERE cmd_number = ?", (new_tags, num))
+            current = res[0] if res and res[0] else ""
+            tags = set(current.split(",")) if current else set()
+            tags.add(tag)
+            self.conn.execute("UPDATE commands SET tags = ? WHERE cmd_number = ?", (",".join(filter(None, tags)), num))
 
-    def increment_usage(self, num):
+    def delete(self, num):
         with self.conn:
-            self.conn.execute("UPDATE commands SET usage_count = usage_count + 1 WHERE cmd_number = ?", (num,))
+            self.conn.execute("DELETE FROM commands WHERE cmd_number = ?", (num,))
 
     def search(self, query):
         q = f"%{query}%"
