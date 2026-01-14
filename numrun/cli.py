@@ -1,154 +1,131 @@
-import sys, subprocess, os, platform, json, tempfile
+import sys, subprocess, os, platform, tempfile
 
-try: 
-    from numrun.database import Database
-except ImportError: 
-    from database import Database
+try: from numrun.database import Database
+except ImportError: from database import Database
 
 db = Database()
+
 C = {
-    "BLUE": "\033[1;34m", "CYAN": "\033[1;36m", "GREEN": "\033[1;32m", 
-    "RED": "\033[1;31m", "YELLOW": "\033[1;33m", "MAGENTA": "\033[1;35m", 
-    "RESET": "\033[0m", "BOLD": "\033[1m", "GRAY": "\033[90m"
+    "B": "\033[1;34m", "C": "\033[1;36m", "G": "\033[1;32m", "R": "\033[1;31m",
+    "Y": "\033[1;33m", "M": "\033[1;35m", "W": "\033[1;37m", "GR": "\033[90m",
+    "RST": "\033[0m", "BOLD": "\033[1m"
 }
 
-def get_help():
-    total = len(db.get_all())
-    logo = fr"""
-{C['BLUE']}    _   __              {C['CYAN']}____ 
-{C['BLUE']}   / | / /_  ______ ___ {C['CYAN']}/ __ \__  ______ 
-{C['BLUE']}  /  |/ / / / / __ `__ \{C['CYAN']}/ /_/ / / / / __ \\
-{C['BLUE']} / /|  / /_/ / / / / / / {C['CYAN']}_  __/ /_/ / / / /
-{C['BLUE']}/_/ |_/\__,_/_/ /_/ /_/{C['CYAN']}_/ |_|\__,_/_/ /_/ """
+def get_pro_help():
+    logo = fr"""{C['C']}    _   __              {C['B']}____ 
+{C['C']}   / | / /_  ______ ___ {C['B']}/ __ \__  ______ 
+{C['C']}  /  |/ / / / / __ `__ \{C['B']}/ /_/ / / / / __ \\
+{C['C']} / /|  / /_/ / / / / / / {C['B']}_  __/ /_/ / / / /
+{C['C']}/_/ |_/\__,_/_/ /_/ /_/{C['B']}_/ |_|\__,_/_/ /_/ {C['GR']}v0.8.1{C['RST']}"""
     
-    dashboard = f"""
-{C['CYAN']}┏━━━━ {C['BOLD']}PRO DASHBOARD{C['RESET']}{C['CYAN']} ━━━━━━━━━━━━━━━━━━━━━━┓{C['RESET']}
-{C['CYAN']}┃{C['RESET']} {C['BLUE']}Commands{C['RESET']}: {total:<5} | {C['BLUE']}FZF{C['RESET']}: Active | {C['BLUE']}Ver{C['RESET']}: 0.5.0   {C['CYAN']}┃{C['RESET']}
-{C['CYAN']}┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛{C['RESET']}
-
-{C['YELLOW']}MODES:{C['RESET']}
-  {C['GREEN']}nr{C['RESET']}              {C['GRAY']}» Interactive Search (FZF){C['RESET']}
-  {C['GREEN']}nr <id|alias>{C['RESET']}   {C['GRAY']}» Run. Add {C['BOLD']}--copy{C['RESET']}{C['GRAY']} to only copy.{C['RESET']}
-  {C['GREEN']}nr save <cmd>{C['RESET']}    {C['GRAY']}» Save (use {C['BOLD']}-g{C['RESET']}{C['GRAY']} for group){C['RESET']}
-  {C['GREEN']}nr edit <id>{C['RESET']}     {C['GRAY']}» Modify cmd/shortcut in editor{C['RESET']}
-  {C['GREEN']}nr list [group]{C['RESET']}  {C['GRAY']}» Show Advanced Table{C['RESET']}
-  {C['GREEN']}nr export/import{C['RESET']} {C['GRAY']}» JSON Backup{C['RESET']}
-"""
-    print(logo + dashboard)
-
-def copy_to_clipboard(text):
-    try:
-        cmd = ['xclip', '-selection', 'clipboard'] if platform.system() == "Linux" else ['pbcopy']
-        subprocess.run(cmd, input=text.encode(), check=True)
-        print(f"📋 {C['GREEN']}Copied to clipboard!{C['RESET']}")
-    except: 
-        print(f"{C['RED']}❌ Error: Install 'xclip' or 'pbcopy'.{C['RESET']}")
-
-def interactive_search():
-    rows = db.get_all()
-    if not rows: return print("Your database is empty.")
-    # ID | Alias | Command
-    input_str = "\n".join([f"{r[0]} | {r[5] or '-'} | {r[1]}" for r in rows])
-    try:
-        fzf = subprocess.Popen(['fzf', '--ansi', '--header', 'Search Commands'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        stdout, _ = fzf.communicate(input=input_str.encode())
-        if stdout:
-            selected_id = stdout.decode().split("|")[0].strip()
-            execute_logic(selected_id, [])
-    except FileNotFoundError: 
-        print(f"{C['YELLOW']}💡 Hint: Install 'fzf' for interactive mode.{C['RESET']}")
-
-def execute_logic(identifier, extra_args):
-    copy_mode = "--copy" in extra_args
-    if copy_mode: extra_args.remove("--copy")
+    print(logo)
+    w = 58 # عرض ثابت لجميع الصناديق
     
+    # قسم الأوامر
+    print(f"\n {C['W']}╭─ {C['G']}PRIMARY COMMANDS{C['W']} {'─'*(w-20)}╮")
+    print(f" │ {C['G']}nr{C['W']:<14} {C['GR']}•{C['W']} Search & Run (FZF Mode)          │")
+    print(f" │ {C['G']}nr save <cmd>{C['W']:<5} {C['GR']}•{C['W']} Save command to database          │")
+    print(f" │ {C['G']}nr list{C['W']:<10} {C['GR']}•{C['W']} Advanced table view                │")
+    print(f" ╰{'─'*w}╯")
+    
+    # قسم المفكرة
+    print(f"\n {C['W']}╭─ {C['M']}NOTEBOOK SYSTEM{C['W']} {'─'*(w-19)}╮")
+    print(f" │ {C['M']}nr note add{C['W']:<6} {C['GR']}•{C['W']} Write and save a text note         │")
+    print(f" │ {C['M']}nr note ls{C['W']:<7} {C['GR']}•{C['W']} Show all saved notes               │")
+    print(f" │ {C['M']}nr note view{C['W']:<5} {C['GR']}•{C['W']} Read note content (nr note view 1) │")
+    print(f" ╰{'─'*w}╯")
+    
+    # قسم الإحصائيات
+    print(f"\n {C['W']}╭─ {C['Y']}SYSTEM & STATS{C['W']} {'─'*(w-18)}╮")
+    print(f" │ {C['Y']}nr stats{C['W']:<11} {C['GR']}•{C['W']} Performance & Usage Graph          │")
+    print(f" │ {C['Y']}nr del <id>{C['W']:<9} {C['GR']}•{C['W']} Remove command from database       │")
+    print(f" ╰{'─'*w}╯{C['RST']}")
+
+def show_list():
+    rows = db.get_all_commands()
+    if not rows:
+        print(f"\n {C['R']}⚠ Database empty. Use 'nr save <cmd>'{C['RST']}"); return
+
+    print(f"\n {C['B']}{C['BOLD']}📋 COMMAND INVENTORY{C['RST']}")
+    top = f" {C['C']}╭{'─'*5}┬{'─'*12}┬{'─'*32}┬{'─'*7}╮{C['RST']}"
+    sep = f" {C['C']}├{'─'*5}┼{'─'*12}┼{'─'*32}┼{'─'*7}┤{C['RST']}"
+    bot = f" {C['C']}╰{'─'*5}┴{'─'*12}┴{'─'*32}┴{'─'*7}╯{C['RST']}"
+    
+    print(top)
+    print(f" {C['C']}│{C['W']} {'ID':<3} {C['C']}│{C['W']} {'ALIAS':<10} {C['C']}│{C['W']} {'COMMAND':<30} {C['C']}│{C['W']} {'RUNS':<5} {C['C']}│")
+    print(sep)
+    for r in rows:
+        alias = (r[5][:10]) if r[5] else "---"
+        cmd = (r[1][:27] + "..") if len(r[1]) > 27 else r[1]
+        print(f" {C['C']}│{C['W']} {r[0]:<3} {C['C']}│{C['Y']} {alias:<10} {C['C']}│{C['W']} {cmd:<30} {C['C']}│{C['G']} {r[3]:<5} {C['C']}│")
+    print(bot)
+
+def view_note(nid):
+    res = db.get_note_by_id(nid)
+    if not res: return
+    w = 56
+    print(f"\n {C['M']}╭{'─'*w}╮")
+    print(f" │ {C['BOLD']}{C['W']}{res[0].center(w)}{C['RST']}{C['M']} │")
+    print(f" ├{'─'*w}┤")
+    for line in res[1].splitlines():
+        chunks = [line[i:i+(w-4)] for i in range(0, len(line), w-4)]
+        for chunk in chunks: print(f" {C['M']}│{C['RST']}  {chunk:<{w-4}}  {C['M']}│")
+    print(f" ├{'─'*w}┤")
+    print(f" │ {C['GR']}{res[3].center(w)}{C['RST']}{C['M']} │")
+    print(f" ╰{'─'*w}╯{C['RST']}")
+
+def execute_logic(identifier, args):
     res = db.get_by_id_or_alias(identifier)
     if not res: return False
-    
-    cmd, cid, alias = res
-    for i, arg in enumerate(extra_args, 1): 
-        cmd = cmd.replace(f"${i}", arg)
-    
-    if copy_mode: 
-        copy_to_clipboard(cmd)
-        return True
-
-    if any(d in cmd.lower() for d in ["rm ", "dd "]):
-        if input(f"{C['RED']}⚠️ GUARD:{C['RESET']} {cmd}\nExecute? (y/N): ").lower() != 'y': return True
-
-    print(f"{C['BLUE']}🚀 Running:{C['RESET']} {cmd}")
+    cmd, cid, _ = res
+    for i, arg in enumerate(args, 1): cmd = cmd.replace(f"${i}", arg)
+    print(f" {C['B']}🚀 Executing: {C['W']}{cmd}{C['RST']}")
     db.increment_usage(cid)
     subprocess.run(cmd, shell=True)
     return True
 
 def main():
-    if len(sys.argv) < 2: 
-        interactive_search()
+    if len(sys.argv) < 2:
+        # البحث التفاعلي الموحد
+        try:
+            cmds = [f"[CMD] {r[0]} | {r[5] or '-'} | {r[1]}" for r in db.get_all_commands()]
+            notes = [f"[NOTE] {r[0]} | {r[1]}" for r in db.get_all_notes()]
+            combined = "\n".join(cmds + notes)
+            fzf = subprocess.Popen(['fzf', '--ansi', '--reverse', '--header', 'NumRun Global Search'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            stdout, _ = fzf.communicate(input=combined.encode())
+            if stdout:
+                line = stdout.decode()
+                val = line.split("|")[0].strip()
+                if "[CMD]" in line: execute_logic(val.replace("[CMD]", "").strip(), [])
+                else: view_note(val.replace("[NOTE]", "").strip())
+        except: print(f" {C['Y']}💡 Hint: 'nr -h' for help.{C['RST']}")
         return
-        
-    arg1 = sys.argv[1]
-    if arg1 in ["-h", "--help"]: 
-        get_help()
-        return
 
-    if execute_logic(arg1, sys.argv[2:]): 
-        return
+    cmd = sys.argv[1]
+    if cmd in ["-h", "--help"]: get_pro_help()
+    elif cmd == "list": show_list()
+    elif cmd == "stats":
+        rows = db.conn.execute("SELECT command, usage_count FROM commands WHERE usage_count > 0 ORDER BY usage_count DESC LIMIT 5").fetchall()
+        print(f"\n {C['Y']}📊 TOP COMMANDS{C['RST']}")
+        for r in rows: print(f" {C['W']}{r[0][:20]:<20} {C['G']}{'█'*r[1]} ({r[1]})")
+    elif cmd == "note":
+        args = sys.argv[2:]
+        if not args or args[0] == "ls":
+            for n in db.get_all_notes(): print(f" {C['Y']}{n[0]:<3} {C['W']}➜ {n[1]}")
+        elif args[0] == "add":
+            title = " ".join(args[1:]) or "New Note"
+            with tempfile.NamedTemporaryFile(suffix=".tmp", delete=False) as tf: tf_path = tf.name
+            subprocess.call([os.environ.get('EDITOR', 'nano'), tf_path])
+            with open(tf_path, 'r') as f: content = f.read()
+            if content.strip(): db.add_note(title, content)
+            os.remove(tf_path); print("✅ Saved.")
+        elif args[0] == "view": view_note(args[1])
+        elif args[0] == "del": db.delete_note(args[1]); print("🗑️ Deleted.")
+    elif cmd == "save":
+        txt = " ".join(sys.argv[2:])
+        if txt: db.add_command(txt); print("✅ Saved.")
+    elif cmd == "del":
+        if len(sys.argv) > 2: db.delete_cmd(sys.argv[2]); print("🗑️ Deleted.")
+    else: execute_logic(cmd, sys.argv[2:])
 
-    if arg1 == "save":
-        group = 'general'
-        if "-g" in sys.argv:
-            idx = sys.argv.index("-g")
-            group = sys.argv[idx+1]
-            cmd_parts = sys.argv[2:idx] + sys.argv[idx+2:]
-        else: 
-            cmd_parts = sys.argv[2:]
-        
-        full_cmd = " ".join(cmd_parts)
-        sug = (cmd_parts[0][0] + cmd_parts[0][-1]).lower() if cmd_parts else "nr"
-        
-        alias = None
-        if not db.is_alias_exists(sug) and sug not in ["save", "list", "del", "edit"]:
-            choice = input(f"💡 Suggestion: '{C['YELLOW']}{sug}{C['RESET']}' shortcut? (y/n/custom): ").lower()
-            if choice == 'y': alias = sug
-            elif choice != 'n' and choice.strip(): alias = choice
-        
-        num = db.add_command(full_cmd, alias, group)
-        print(f"✅ {C['GREEN']}Saved as #{num} in [{group}]{C['RESET']}")
-
-    elif arg1 == "list":
-        group = sys.argv[2] if len(sys.argv) > 2 else None
-        rows = db.get_all(group)
-        header = f"{C['BLUE']}{'ID':<4} | {'ALIAS':<10} | {'COMMAND':<35} | {'GROUP':<10} | {'USES'}{C['RESET']}"
-        sep = f"{C['GRAY']}{'-'*4}-+-{'-'*10}-+-{'-'*35}-+-{'-'*10}-+-{'-'*5}{C['RESET']}"
-        print(f"\n📋 {C['CYAN']}Inventory:{C['RESET']}\n{header}\n{sep}")
-        for r in rows:
-            # r[0]:id, r[1]:cmd, r[2]:grp, r[3]:uses, r[4]:last, r[5]:alias
-            print(f"{r[0]:<4} | {C['YELLOW']}{str(r[5] or '-'):<10}{C['RESET']} | {r[1][:32]:<35} | {C['MAGENTA']}{r[2]:<10}{C['RESET']} | {r[3]}")
-
-    elif arg1 == "edit":
-        if len(sys.argv) < 3: return
-        res = db.get_by_id_or_alias(sys.argv[2])
-        if not res: return
-        with tempfile.NamedTemporaryFile(suffix=".tmp", delete=False) as tf:
-            tf.write(f"{res[0]}\n# Alias: {res[2] or ''}".encode())
-            tf_path = tf.name
-        subprocess.call([os.environ.get('EDITOR', 'nano'), tf_path])
-        with open(tf_path, 'r') as f:
-            lines = f.readlines()
-            new_cmd = lines[0].strip()
-            new_alias = lines[1].replace("# Alias:", "").strip() if len(lines)>1 else res[2]
-        db.update_command(res[1], new_cmd, new_alias)
-        os.remove(tf_path); print("📝 Updated.")
-
-    elif arg1 == "export":
-        data = [dict(zip(['id','cmd','grp','uses','last','alias'], r)) for r in db.get_all()]
-        with open("numrun_backup.json", "w") as f: json.dump(data, f, indent=4)
-        print("📤 Exported to numrun_backup.json")
-
-    elif arg1 == "del":
-        if len(sys.argv) > 2:
-            db.delete(sys.argv[2])
-            print("🗑️ Deleted.")
-
-if __name__ == "__main__": 
-    main()
+if __name__ == "__main__": main()
