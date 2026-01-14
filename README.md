@@ -1,32 +1,24 @@
-# 🚀 NumRun
+# 🚀 NumRun (v0.1.0)
+
+**The Ultimate Smart Notebook for Terminal Users.**
+
+NumRun is a productivity tool designed for developers who use the command line. It allows you to save complex commands, organize them into groups, and keep quick text notes—all without leaving your terminal.
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![NixOS Compatible](https://img.shields.io/badge/NixOS-Compatible-brightgreen.svg)](https://nixos.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](http://makeapullrequest.com)
 
-(NumRun) is the "smart notebook" for black screen users. Instead of wasting time digging through your command history for a complex command you wrote a week ago, this tool lets you save your long commands and assign them a simple number (e.g., number 1). Once you type nr 1, the command runs instantly, with an awesome feature that warns you if the command you’re about to run is dangerous (like deletion commands) so you don’t make a mistake. You can even search through your commands quickly and visually.
-
 ---
 
-## ✨ Pro Features
+## ✨ Key Features
 
-* **⚡ Instant Execution:** Run any command by its ID:
-
-  ```bash
-  nr 5
-  ```
-* **🎯 Interactive Mode:** Run `nr` without arguments to open a visual search (FZF integration).
-* **🔧 Dynamic Arguments:** Save commands with `$1, $2` and pass values at runtime:
-
-  ```bash
-  nr 1 google.com
-  ```
-* **🛡️ Smart Guard:** Automatically detects dangerous commands (like `rm`) and asks for confirmation.
-* **📊 Usage Analytics:** Tracks execution counts and last used timestamps.
-* **🏷️ Tagging & Search:** Search by content or custom tags like `docker` or `git`.
-* **⌨️ TAB Autocomplete:** Deep integration with Bash and Zsh.
-* **❄️ NixOS Optimized:** Reproducible environment via `shell.nix`.
+* **⚡ Instant Execution:** Run saved commands using their ID (e.g., `nr 1`).
+* **📂 Batch Groups:** Organize commands into groups (e.g., `setup`, `deploy`) and run them sequentially with `nr run-group`.
+* **📝 Quick Notes:** Built-in notebook to store snippets and reminders.
+* **🛡️ Smart Guard:** Automatically detects dangerous keywords (`rm`, `dd`) and asks for confirmation.
+* **🐍 No Dependencies:** Written in pure Python 3 using SQLite; works on NixOS without pip install.
+* **💾 Data Portability:** Export your entire database to a JSON file for backup or sync.
 
 ---
 
@@ -48,32 +40,55 @@ pip install -e .
 numrun setup-completion
 ```
 
+```bash
+source ~/.bashrc
+```
+
 ---
 
 ## 🚀 Quick Start Guide
 
-### Save a Command with Dynamic Arguments
+| Command                                | Description                                         |
+| -------------------------------------- | --------------------------------------------------- |
+| `nr save "ls -la"`                     | Save a command to the 'general' group.              |
+| `nr save "nix-collect-garbage" -g sys` | Save a command to a specific group.                 |
+| `nr list`                              | View all saved commands and their groups.           |
+| `nr run-group sys`                     | Execute all commands in the 'sys' group.            |
+| `nr note add "Server IP"`              | Create a new text note (opens your default editor). |
+| `nr note ls`                           | List all saved notes.                               |
+| `nr note view 1`                       | View the content of a specific note.                |
+| `nr export`                            | Backup everything to `~/numrun_backup.json`.        |
+| `nr del 5`                             | Delete a command by its ID.                         |
+
+---
+
+### Example Usage
+
+Save a command with dynamic arguments:
 
 ```bash
 nr save "ping -c 3 $1"
 # Saved as #1
 ```
 
-### Execute with Value
+Execute the command with a value:
 
 ```bash
 nr 1 google.com
 # Executes: ping -c 3 google.com
 ```
 
-### Visual Search (FZF)
+Open visual search (FZF):
 
-Type `nr` and press Enter to browse your commands interactively.
+```bash
+nr
+```
 
-### Smart Guard in Action
+Smart Guard in action (prevents dangerous commands like `rm`):
 
-If you try to run a command containing `rm` or `dd`, NumRun will prompt:
+```bash
 ⚠️ DANGER DETECTED. Confirm execution? (y/N)
+```
 
 ---
 
@@ -81,19 +96,19 @@ If you try to run a command containing `rm` or `dd`, NumRun will prompt:
 
 ```
 numrun/
-├── numrun/                # Core Package Directory
-│   ├── __init__.py        # Makes the directory a Python package
-│   ├── cli.py             # Main CLI Logic, Fastfetch UI, and FZF integration
-│   ├── database.py        # SQLite Database handler and migrations
-│   └── setup_completion.py # Script to install shell TAB completion
-├── completions/           # Shell completion definition files
+├── numrun/                
+│   ├── __init__.py        
+│   ├── cli.py             
+│   ├── database.py        
+│   └── setup_completion.py
+├── completions/           
 │   ├── numrun.bash
 │   └── numrun.zsh
-├── pyproject.toml         # Build system requirements and CLI entry points
-├── shell.nix              # NixOS reproducible environment file
-├── setup.sh               # Automated installation & alias setup script
-├── README.md              # Project documentation and usage guide
-└── LICENSE                # Project license (e.g., MIT)
+├── pyproject.toml         
+├── shell.nix              
+├── setup.sh               
+├── README.md              
+└── LICENSE                
 ```
 
 ---
@@ -103,19 +118,20 @@ numrun/
 1. Fork the project.
 2. Create a feature branch:
 
-   ```bash
-   git checkout -b feature/AmazingFeature
-   ```
+```bash
+git checkout -b feature/AmazingFeature
+```
+
 3. Implement your changes.
 4. Push to the branch:
 
-   ```bash
-   git push origin feature/AmazingFeature
-   ```
+```bash
+git push origin feature/AmazingFeature
+```
+
 5. Open a Pull Request.
 
 ---
-
 
 ## 📜 License
 
