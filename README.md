@@ -81,11 +81,19 @@ If you try to run a command containing `rm` or `dd`, NumRun will prompt:
 
 ```
 numrun/
-├─ cli.py         # Core logic with Fastfetch-style UI and Argument Parser
-├─ database.py    # SQLite handler with auto-migration support
-├─ completions/   # Shell completion scripts for Bash/Zsh
-├─ setup.sh       # One-click installer and alias creator
-└─ shell.nix      # Reproducible environment for Nix users
+├── numrun/                # Core Package Directory
+│   ├── __init__.py        # Makes the directory a Python package
+│   ├── cli.py             # Main CLI Logic, Fastfetch UI, and FZF integration
+│   ├── database.py        # SQLite Database handler and migrations
+│   └── setup_completion.py # Script to install shell TAB completion
+├── completions/           # Shell completion definition files
+│   ├── numrun.bash
+│   └── numrun.zsh
+├── pyproject.toml         # Build system requirements and CLI entry points
+├── shell.nix              # NixOS reproducible environment file
+├── setup.sh               # Automated installation & alias setup script
+├── README.md              # Project documentation and usage guide
+└── LICENSE                # Project license (e.g., MIT)
 ```
 
 ---
