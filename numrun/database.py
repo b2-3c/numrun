@@ -44,6 +44,9 @@ class Database:
     def get_all_commands(self):
         return self.conn.execute("SELECT cmd_number, command, group_name, usage_count, last_used, alias FROM commands ORDER BY cmd_number").fetchall()
 
+    def get_by_group(self, group_name):
+        return self.conn.execute("SELECT command, cmd_number FROM commands WHERE group_name = ? ORDER BY cmd_number", (group_name,)).fetchall()
+
     def get_by_id_or_alias(self, identifier):
         res = self.conn.execute("SELECT command, cmd_number, alias FROM commands WHERE alias = ?", (identifier,)).fetchone()
         if not res and str(identifier).isdigit():
@@ -71,7 +74,3 @@ class Database:
 
     def delete_note(self, nid):
         with self.conn: self.conn.execute("DELETE FROM notes WHERE note_id = ?", (nid,))
-
-    def is_alias_exists(self, alias):
-        if not alias: return False
-        return self.conn.execute("SELECT 1 FROM commands WHERE alias = ?", (alias,)).fetchone() is not None
