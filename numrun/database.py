@@ -1,4 +1,4 @@
-import sqlite3, os, json
+import sqlite3, os
 from datetime import datetime
 
 class Database:
@@ -14,56 +14,31 @@ class Database:
                 CREATE TABLE IF NOT EXISTS commands (
                     cmd_number INTEGER PRIMARY KEY AUTOINCREMENT,
                     command TEXT NOT NULL,
-                    group_name TEXT DEFAULT 'general',
                     usage_count INTEGER DEFAULT 0,
-                    last_used TEXT,
                     alias TEXT UNIQUE
                 );
                 CREATE TABLE IF NOT EXISTS notes (
                     note_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     title TEXT NOT NULL,
                     content TEXT,
-                    tag TEXT DEFAULT 'memo',
                     created_at TEXT
                 );
             """)
 
-    def add_command(self, command, alias=None, group='general'):
+    def add_command(self, command, alias=None):
         try:
             with self.conn:
-                self.conn.execute("INSERT INTO commands (command, alias, group_name) VALUES (?, ?, ?)", (command, alias, group))
-            return True
-        except sqlite3.IntegrityError: return False
-
-    def update_command(self, cmd_id, new_cmd):
-        with self.conn:
-            self.conn.execute("UPDATE commands SET command = ? WHERE cmd_number = ?", (new_cmd, cmd_id))
-
-    def update_alias(self, cmd_id, new_alias):
-        try:
-            with self.conn:
-                self.conn.execute("UPDATE commands SET alias = ? WHERE cmd_number = ?", (new_alias, cmd_id))
+                self.conn.execute("INSERT INTO commands (command, alias) VALUES (?, ?)", (command, alias))
             return True
         except sqlite3.IntegrityError: return False
 
     def get_all_commands(self):
         return self.conn.execute("SELECT * FROM commands ORDER BY cmd_number").fetchall()
 
-    def get_by_group(self, group_name):
-        return self.conn.execute("SELECT * FROM commands WHERE group_name = ?", (group_name,)).fetchall()
-
-    def increment_usage(self, num):
-        now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        with self.conn: self.conn.execute("UPDATE commands SET usage_count = usage_count + 1, last_used = ? WHERE cmd_number = ?", (now, num))
-
-    def delete_cmd(self, num):
-        with self.conn:
-            cursor = self.conn.execute("DELETE FROM commands WHERE cmd_number = ?", (num,))
-            return cursor.rowcount > 0
-
     def add_note(self, title, content):
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
-        with self.conn: self.conn.execute("INSERT INTO notes (title, content, created_at) VALUES (?, ?, ?)", (title, content, now))
+        with self.conn:
+            self.conn.execute("INSERT INTO notes (title, content, created_at) VALUES (?, ?, ?)", (title, content, now))
 
     def get_all_notes(self):
         return self.conn.execute("SELECT note_id, title, created_at FROM notes ORDER BY note_id DESC").fetchall()
@@ -71,7 +46,29 @@ class Database:
     def get_note(self, nid):
         return self.conn.execute("SELECT * FROM notes WHERE note_id = ?", (nid,)).fetchone()
 
-    def get_backup_data(self):
-        cmds = [dict(row) for row in self.conn.execute("SELECT * FROM commands").fetchall()]
-        notes = [dict(row) for row in self.conn.execute("SELECT * FROM notes").fetchall()]
-        return {"commands": cmds, "notes": notes}
+    def update_command(self, cmd_id, new_cmd=None, new_alias=None):
+        with self.conn:
+            if new_cmd: self.conn.execute("UPDATE commands SET command = ? WHERE cmd_number = ?", (new_cmd, cmd_id))
+            if new_alias:
+                try: self.conn.execute("UPDATE commands SET alias = ? WHERE cmd_number = ?", (new_alias, cmd_id))
+                except sqlite3.IntegrityError: return False
+        return True
+
+    def update_note(self, note_id, new_title=None, new_content=None):
+        with self.conn:
+            if new_title: self.conn.execute("UPDATE notes SET title = ? WHERE note_id = ?", (new_title, note_id))
+            if new_content: self.conn.execute("UPDATE notes SET content = ? WHERE note_id = ?", (new_content, note_id))
+
+    def delete_cmd(self, num):
+        with self.conn:
+            return self.conn.execute("DELETE FROM commands WHERE cmd_number = ?", (num,)).rowcount > 0
+
+    def delete_note(self, nid):
+        with self.conn:
+            return self.conn.execute("DELETE FROM notes WHERE note_id = ?", (nid,)).rowcount > 0
+
+    def wipe_everything(self):
+        with self.conn:
+            self.conn.execute("DELETE FROM commands")
+            self.conn.execute("DELETE FROM notes")
+            self.conn.execute("DELETE FROM sqlite_sequence")
