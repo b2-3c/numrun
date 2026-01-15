@@ -58,6 +58,7 @@ class Database:
         with self.conn:
             if new_title: self.conn.execute("UPDATE notes SET title = ? WHERE note_id = ?", (new_title, note_id))
             if new_content: self.conn.execute("UPDATE notes SET content = ? WHERE note_id = ?", (new_content, note_id))
+        return True
 
     def delete_cmd(self, num):
         with self.conn:
@@ -66,6 +67,11 @@ class Database:
     def delete_note(self, nid):
         with self.conn:
             return self.conn.execute("DELETE FROM notes WHERE note_id = ?", (nid,)).rowcount > 0
+
+    def get_stats(self):
+        cmd_count = self.conn.execute("SELECT COUNT(*) FROM commands").fetchone()[0]
+        note_count = self.conn.execute("SELECT COUNT(*) FROM notes").fetchone()[0]
+        return cmd_count, note_count
 
     def wipe_everything(self):
         with self.conn:
