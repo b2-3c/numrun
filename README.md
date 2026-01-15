@@ -79,18 +79,10 @@ SYSTEM:
 
 ### Example Usage
 
-Save a command with dynamic arguments:
-
 ```bash
-nr save "ping -c 3 $1"
-# Saved as #1
-```
-
-Execute the command with a value:
-
-```bash
-nr 1 google.com
-# Executes: ping -c 3 google.com
+nr c-a "ls -la"
+nr -c
+nr 1
 ```
 
 Open visual search (FZF):
