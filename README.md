@@ -46,19 +46,34 @@ source ~/.bashrc
 
 ---
 
-## 🚀 Quick Start Guide
+## 📖 NumRun Shortcuts
 
-| Command                                | Description                                         |
-| -------------------------------------- | --------------------------------------------------- |
-| `nr save "ls -la"`                     | Save a command to the 'general' group.              |
-| `nr save "nix-collect-garbage" -g sys` | Save a command to a specific group.                 |
-| `nr list`                              | View all saved commands and their groups.           |
-| `nr run-group sys`                     | Execute all commands in the 'sys' group.            |
-| `nr note add "Server IP"`              | Create a new text note (opens your default editor). |
-| `nr note ls`                           | List all saved notes.                               |
-| `nr note view 1`                       | View the content of a specific note.                |
-| `nr export`                            | Backup everything to `~/numrun_backup.json`.        |
-| `nr del 5`                             | Delete a command by its ID.                         |
+```
+USAGE:
+  nr [id/alias]   Run stored command by ID or Alias
+  nr s            Global search (Commands + Notes) using fzf
+
+SEARCH:
+  s-c            Search Commands only
+  s-n            Search Notes only
+
+COMMANDS:
+  c-a [cmd]      Add new command
+  -c             List all commands
+  e-c [id]       Edit command
+  d-c [id]       Delete command
+
+NOTES:
+  n-a [title]    Add new note (opens editor)
+  -n             List all notes
+  e-n [id]       Edit note title
+  d-n [id]       Delete note
+
+SYSTEM:
+  -i             Show System Info & Stats
+  -p [min]       Pomodoro Timer (Default 25m)
+  -h             Show this help page
+```
 
 ---
 
