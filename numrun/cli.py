@@ -11,152 +11,114 @@ db = Database()
 C = {
     "B": "\033[1;34m", "C": "\033[1;36m", "G": "\033[1;32m", "R": "\033[1;31m",
     "Y": "\033[1;33m", "M": "\033[1;35m", "W": "\033[1;37m", "GR": "\033[90m",
-    "RST": "\033[0m", "BOLD": "\033[1m"
+    "RST": "\033[0m"
 }
 
-DANGEROUS = ["rm ", "mkfs", "dd ", "> /dev/", "shutdown", "reboot"]
-
-def smart_guard(cmd_text):
-    if any(k in cmd_text for k in DANGEROUS):
-        print(f"\n{C['Y']}⚠️  DANGER DETECTED: {C['W']}{cmd_text}{C['RST']}")
-        return input(f" {C['R']}Confirm execution? (y/N): {C['RST']}").lower() == 'y'
-    return True
-
 def get_pro_help():
-    logo = fr"""{C['C']}    _   __              {C['B']}  ____ 
-{C['C']}   / | / /_  ______ ___ {C['B']} / __  \__  ______ 
-{C['C']}  /  |/ / / / / __ `__ \{C['B']}/ /_/  / / /  / __ \\
-{C['C']} / /|  / /_/ / / / / / / {C['B']}_  __/ /_/  / / / /
-{C['C']}/_/ |_/\__,_/_/ /_/ /_/{C['B']}_/ |_|\__,_/_/ /_/ {C['Y']}v0.2.0{C['RST']}"""
-    print(logo)
-    w = 65
-    def line(title, color):
-        print(f"\n {color}╭─ {title} {'─'*(w-len(title)-4)}╮{C['RST']}")
+    print(f"\n{C['C']}--- NUMRUN v0.6.0 ---{C['RST']}")
+    print(f" {C['Y']}Operations:{C['RST']}")
+    print(f"  {C['G']}nr -c{C['W']:<12} {C['GR']}•{C['W']} List Commands")
+    print(f"  {C['G']}nr c-a <cmd>{C['W']:<8} {C['GR']}•{C['W']} Add New Command")
+    print(f"  {C['G']}nr -n{C['W']:<12} {C['GR']}•{C['W']} List Notes")
+    print(f"  {C['G']}nr n-a <title>{C['W']:<6} {C['GR']}•{C['W']} Add New Note")
+    print(f" {C['Y']}Management:{C['RST']}")
+    print(f"  {C['G']}e-c / e-n{C['W']:<10} {C['GR']}•{C['W']} Edit (Cmd / Note)")
+    print(f"  {C['G']}d-c / d-n{C['W']:<10} {C['GR']}•{C['W']} Delete (Cmd / Note)")
+    print(f"  {C['B']}s / s-c / s-n{C['W']:<10} {C['GR']}•{C['W']} FZF Search")
 
-    line("COMMAND MANAGEMENT", C['G'])
-    print(f" │ {C['G']}nr save \"cmd\"{C['W']:<10} {C['GR']}•{C['W']} Save command with smart alias        │")
-    print(f" │ {C['G']}nr list{C['W']:<15} {C['GR']}•{C['W']} Show all commands, IDs & aliases       │")
-    print(f" │ {C['G']}nr edit <ID>{C['W']:<11} {C['GR']}•{C['W']} Modify the text of a stored command    │")
-    print(f" │ {C['G']}nr del <ID>{C['W']:<12} {C['GR']}•{C['W']} Permanently delete a command           │")
-    print(f" ╰{'─'*w}╯")
+def smart_fzf(mode="all"):
+    items = []
+    if mode in ["all", "commands"]:
+        for r in db.get_all_commands():
+            items.append(f"[CMD] {r['cmd_number']} | {r['alias'] or '---'} | {r['command']}")
+    if mode in ["all", "notes"]:
+        for n in db.get_all_notes():
+            items.append(f"[NOTE] {n['note_id']} | {n['title']}")
+    
+    if not items: return
 
-    line("EXECUTION & ALIAS", C['B'])
-    print(f" │ {C['B']}nr{C['W']:<19} {C['GR']}•{C['W']} Open Visual Search (FZF Mode)          │")
-    print(f" │ {C['B']}nr <ID/Alias> [args]{C['W']:<1} {C['GR']}•{C['W']} Run command (supports $1, $2, etc.)    │")
-    print(f" │ {C['B']}nr alias set <ID> <A>{C['W']:<1} {C['GR']}•{C['W']} Assign/Change a custom alias           │")
-    print(f" │ {C['B']}nr alias del <ID>{C['W']:<4} {C['GR']}•{C['W']} Remove alias only (keep command)       │")
-    print(f" │ {C['B']}nr run-group <G>{C['W']:<5} {C['GR']}•{C['W']} Execute all commands in a group        │")
-    print(f" ╰{'─'*w}╯")
-
-    line("NOTES & SYSTEM", C['M'])
-    print(f" │ {C['M']}nr note add <title>{C['W']:<2} {C['GR']}•{C['W']} Create a new note ($EDITOR)            │")
-    print(f" │ {C['M']}nr note ls{C['W']:<10} {C['GR']}•{C['W']} List all saved notes                   │")
-    print(f" │ {C['M']}nr note view <ID>{C['W']:<3} {C['GR']}•{C['W']} Display note content                   │")
-    print(f" │ {C['M']}nr export{C['W']:<11} {C['GR']}•{C['W']} Backup data to ~/numrun_backup.json    │")
-    print(f" ╰{'─'*w}╯")
-
-def execute_final(command, args=[]):
-    for i, arg in enumerate(args, 1):
-        command = command.replace(f"${i}", arg)
-    if smart_guard(command):
-        print(f"{C['B']}🚀 Executing:{C['RST']} {command}")
-        subprocess.run(command, shell=True)
-        return True
-    return False
-
-def interactive_fzf():
-    rows = db.get_all_commands()
-    if not rows: print("List is empty."); return
-    lines = [f"{r['cmd_number']} | {(r['alias'] or '---'):<10} | {r['command']}" for r in rows]
     try:
-        p = subprocess.Popen(['fzf', '--ansi', '--reverse', '--header=Select to Run (ESC to exit)'], 
-                           stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
-        out, _ = p.communicate(input="\n".join(lines))
-        if out: execute_final(out.split('|')[2].strip())
-    except FileNotFoundError:
-        show_list()
-
-def show_list():
-    rows = db.get_all_commands()
-    if not rows: print(f"\n {C['R']}⚠ No commands found.{C['RST']}"); return
-    print(f"\n {C['C']}ID  │ ALIAS      │ COMMAND PREVIEW")
-    print(f" {'─'*50}")
-    for r in rows:
-        alias = (r['alias'] or "---")[:10]
-        cmd = (r['command'][:30] + "..") if len(r['command']) > 30 else r['command']
-        print(f" {C['Y']}{str(r['cmd_number']):<3} {C['C']}│ {C['G']}{alias:<10} {C['C']}│ {C['W']}{cmd}")
+        p = subprocess.Popen(['fzf', '--ansi', '--reverse'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+        out, _ = p.communicate(input="\n".join(items))
+        if out:
+            if "[CMD]" in out:
+                subprocess.run(out.split('|')[2].strip(), shell=True)
+            elif "[NOTE]" in out:
+                note_id = out.split('|')[0].replace("[NOTE]", "").strip()
+                res = db.get_note(note_id)
+                if res: print(f"\n{C['M']}{res['title']}{C['RST']}\n{res['content']}")
+    except: print("fzf required.")
 
 def main():
-    if len(sys.argv) < 2:
-        interactive_fzf(); return
-
+    if len(sys.argv) < 2: smart_fzf("commands"); return
     cmd = sys.argv[1]
 
-    if cmd in ["-h", "--help"]: get_pro_help()
-    elif cmd == "list": show_list()
-    elif cmd == "save":
-        parts = sys.argv[2:]
-        if not parts: return
-        group = 'general'
-        if "-g" in parts:
-            idx = parts.index("-g"); group = parts[idx+1]; parts = parts[:idx] + parts[idx+2:]
-        full_cmd = " ".join(parts)
-        first_w = parts[0]
-        sugg = (first_w[0] + first_w[-1]).lower() if len(first_w) > 1 else first_w[0]
-        alias = input(f" {C['Y']}Alias (Enter for '{sugg}'): {C['RST']}").strip() or sugg
-        if db.add_command(full_cmd, alias=alias, group=group):
-            print(f" {C['G']}✅ Saved as '{alias}' in [{group}]{C['RST']}")
-        else:
-            db.add_command(full_cmd, alias=None, group=group)
-            print(f" {C['R']}⚠ Alias taken. Saved by ID only.{C['RST']}")
+    # --- Commands Section ---
+    if cmd == "-c":
+        for r in db.get_all_commands():
+            print(f" {C['Y']}{r['cmd_number']:<3} {C['C']}│ {C['G']}{str(r['alias']):<10} {C['C']}│ {C['W']}{r['command']}")
 
-    elif cmd == "edit" and len(sys.argv) > 2:
+    elif cmd == "c-a":
+        full_cmd = " ".join(sys.argv[2:])
+        if not full_cmd: return
+        sugg = (sys.argv[2][0] + sys.argv[2][-1]).lower() if len(sys.argv[2]) > 1 else sys.argv[2][0]
+        while True:
+            alias = input(f" {C['Y']}Alias (Enter for '{sugg}'): {C['RST']}").strip() or sugg
+            if alias.startswith("-"): print(f" {C['R']}⚠ Cannot start with '-'{C['RST']}")
+            else: break
+        db.add_command(full_cmd, alias=alias); print("✅ Command Saved.")
+
+    # --- Notes Section ---
+    elif cmd == "-n":
+        for n in db.get_all_notes(): print(f" {n['note_id']} 📄 {n['title']}")
+
+    elif cmd == "n-a":
+        title = " ".join(sys.argv[2:]) or "Untitled"
+        with tempfile.NamedTemporaryFile(suffix=".tmp", delete=False) as tf:
+            subprocess.call([os.environ.get('EDITOR', 'nano'), tf.name])
+            with open(tf.name, 'r') as f: content = f.read()
+        if content.strip(): db.add_note(title, content); print("✅ Note Saved.")
+
+    # --- Edit & Delete ---
+    elif cmd == "e-c" and len(sys.argv) > 2:
         cid = sys.argv[2]
-        new_cmd = input(f" {C['C']}Enter new command text: {C['RST']}")
-        if new_cmd: db.update_command(cid, new_cmd); print("✅ Command Updated.")
+        new_c = input(f" {C['C']}New Command: {C['RST']}")
+        new_a = input(f" {C['C']}New Alias: {C['RST']}")
+        db.update_command(cid, new_cmd=new_c if new_c else None, new_alias=new_a if new_a else None)
+        print("✅ Updated.")
 
-    elif cmd == "alias":
-        args = sys.argv[2:]
-        if args[0] == "set" and len(args) >= 3:
-            if db.update_alias(args[1], args[2]): print("✅ Alias Set.")
-            else: print("❌ Alias already exists.")
-        elif args[0] == "del" and len(args) >= 2:
-            db.update_alias(args[1], None); print("🗑️ Alias Removed.")
-
-    elif cmd == "del" and len(sys.argv) > 2:
-        if db.delete_cmd(sys.argv[2]): print("🗑️ Command Deleted.")
-
-    elif cmd == "run-group" and len(sys.argv) > 2:
-        for r in db.get_by_group(sys.argv[2]):
-            execute_final(r['command']); db.increment_usage(r['cmd_number'])
-
-    elif cmd == "note":
-        args = sys.argv[2:]
-        if args[0] == "add":
-            title = " ".join(args[1:]) or "Untitled"
-            with tempfile.NamedTemporaryFile(suffix=".tmp", delete=False) as tf:
+    elif cmd == "e-n" and len(sys.argv) > 2:
+        nid = sys.argv[2]
+        res = db.get_note(nid)
+        if not res: return
+        new_t = input(f" {C['C']}New Title: {C['RST']}")
+        if input(f" {C['Y']}Edit Content? (y/N): {C['RST']}").lower() == 'y':
+            with tempfile.NamedTemporaryFile(suffix=".tmp", delete=False, mode='w+') as tf:
+                tf.write(res['content']); tf.flush()
                 subprocess.call([os.environ.get('EDITOR', 'nano'), tf.name])
-                with open(tf.name, 'r') as f: content = f.read()
-            if content.strip(): db.add_note(title, content); print("✅ Note Saved.")
-        elif args[0] == "ls":
-            for n in db.get_all_notes(): print(f" {n['note_id']} 📄 {n['title']}")
-        elif args[0] == "view" and len(args) > 1:
-            res = db.get_note(args[1])
-            if res: print(f"\n{C['M']}{res['title']}{C['RST']}\n{res['content']}")
+                with open(tf.name, 'r') as f: new_content = f.read()
+        else: new_content = None
+        db.update_note(nid, new_title=new_t if new_t else None, new_content=new_content)
+        print("✅ Updated.")
 
-    elif cmd == "export":
-        path = os.path.expanduser("~/numrun_backup.json")
-        with open(path, "w") as f: json.dump(db.get_backup_data(), f, indent=4)
-        print(f"✅ Exported to {path}")
+    elif cmd == "d-c" and len(sys.argv) > 2:
+        if db.delete_cmd(sys.argv[2]): print("🗑️ Deleted.")
 
+    elif cmd == "d-n" and len(sys.argv) > 2:
+        if db.delete_note(sys.argv[2]): print("🗑️ Deleted.")
+
+    elif cmd == "d-all":
+        if input(f" {C['R']}WIPE EVERYTHING? (CONFIRM): {C['RST']}") == "CONFIRM":
+            db.wipe_everything(); print("💥 Done.")
+
+    elif cmd in ["s", "s-c", "s-n"]: smart_fzf(cmd.replace("s-", "") if "-" in cmd else "all")
+    elif cmd == "-h": get_pro_help()
+    
     else:
-        found = False
         for r in db.get_all_commands():
             if str(r['cmd_number']) == cmd or r['alias'] == cmd:
-                if execute_final(r['command'], sys.argv[2:]):
-                    db.increment_usage(r['cmd_number'])
-                found = True; break
-        if not found: print(f"{C['R']}❌ Unknown: {cmd}{C['RST']}")
+                subprocess.run(r['command'], shell=True); return
+        print(f"❌ Unknown: {cmd}")
 
 if __name__ == "__main__":
     main()
