@@ -85,12 +85,6 @@ nr -c
 nr 1
 ```
 
-Open visual search (FZF):
-
-```bash
-nr
-```
-
 Smart Guard in action (prevents dangerous commands like `rm`):
 
 ```bash
