@@ -38,7 +38,7 @@ class Database:
     def add_note(self, title, content):
         now = datetime.now().strftime("%Y-%m-%d %H:%M")
         with self.conn:
-            self.conn.execute("INSERT INTO notes (title, content, created_at) VALUES (?, ?, ?)", (title, content, now))
+            self.conn.execute("INSERT INTO notes (title, content, created_at) VALUES (?, ? , ?)", (title, content, now))
 
     def get_all_notes(self):
         return self.conn.execute("SELECT note_id, title, created_at FROM notes ORDER BY note_id DESC").fetchall()
@@ -72,9 +72,3 @@ class Database:
         cmd_count = self.conn.execute("SELECT COUNT(*) FROM commands").fetchone()[0]
         note_count = self.conn.execute("SELECT COUNT(*) FROM notes").fetchone()[0]
         return cmd_count, note_count
-
-    def wipe_everything(self):
-        with self.conn:
-            self.conn.execute("DELETE FROM commands")
-            self.conn.execute("DELETE FROM notes")
-            self.conn.execute("DELETE FROM sqlite_sequence")
