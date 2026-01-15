@@ -1,4 +1,4 @@
-# 🚀 NumRun (v0.1.0)
+# 🚀 NumRun (v1.0.1)
 
 **The Ultimate Smart Notebook for Terminal Users.**
 
