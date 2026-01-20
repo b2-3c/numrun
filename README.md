@@ -33,16 +33,6 @@ bash setup.sh
 source ~/.bashrc  # or ~/.zshrc
 ```
 Install the search utility: nix-env -iA nixos.fzf (or via your system's package manager).
-### 2️⃣ Manual Installation
-
-```bash
-pip install -e .
-numrun setup-completion
-```
-
-```bash
-source ~/.bashrc
-```
 
 ---
 
