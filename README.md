@@ -38,32 +38,16 @@ Install the search utility: nix-env -iA nixos.fzf (or via your system's package 
 
 ## 📖 NumRun Shortcuts
 
-```
-USAGE:
-  nr [id/alias]   Run stored command by ID or Alias
-  nr s            Global search (Commands + Notes) using fzf
-
-SEARCH:
-  s-c            Search Commands only
-  s-n            Search Notes only
-
-COMMANDS:
-  c-a [cmd]      Add new command
-  -c             List all commands
-  e-c [id]       Edit command
-  d-c [id]       Delete command
-
-NOTES:
-  n-a [title]    Add new note (opens editor)
-  -n             List all notes
-  e-n [id]       Edit note title
-  d-n [id]       Delete note
-
-SYSTEM:
-  -i             Show System Info & Stats
-  -p [min]       Pomodoro Timer (Default 25m)
-  -h             Show this help page
-```
+| الأمر            | الوصف                                                |
+| :--------------- | :--------------------------------------------------- |
+| `nr [id/alias]`  | تشغيل أمر محفوظ باستخدام المعرف أو الاسم المستعار.   |
+| `nr -c`          | عرض قائمة بجميع الأوامر المحفوظة في جدول.            |
+| `nr c-a [cmd]`   | إضافة أمر جديد مع اقتراح اسم مستعار تلقائي.          |
+| `nr -n`          | عرض قائمة بجميع الملاحظات المحفوظة.                  |
+| `nr n-a [title]` | إضافة ملاحظة جديدة وفتح المحرر لكتابة محتواها.       |
+| `nr e-n-c [id]`  | **(جديد)** تحرير محتوى ملاحظة موجودة.                |
+| `nr -i`          | عرض معلومات النظام وإحصائيات الاستخدام.              |
+| `nr s`           | البحث التفاعلي في الأوامر والملاحظات باستخدام `fzf`. |
 
 ---
 
